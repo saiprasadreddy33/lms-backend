@@ -23,76 +23,83 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+NestJS backend for an adaptive testing LMS. It exposes JWT-based authentication, question management, and adaptive test APIs backed by MongoDB.
 
-## Project setup
+## Setup
+
+1. Install dependencies:
 
 ```bash
-$ npm install
+npm install
 ```
 
-## Compile and run the project
+2. Configure environment:
+
+Create a `.env` file based on `.env.example` and set:
+
+- `MONGO_URI` MongoDB Atlas connection string
+- `JWT_SECRET` secret used to sign access tokens
+- `PORT` HTTP port for the server
+
+## Running the server
 
 ```bash
 # development
-$ npm run start
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# production
+npm run build
+npm run start:prod
 ```
 
-## Run tests
+The API will be available at `http://localhost:PORT`.
+
+## Seeding questions
+
+To insert 500 sample questions with varying difficulties and weights:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run seed
 ```
 
-## Deployment
+This uses the current `MONGO_URI` value.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Testing
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run test
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+This runs unit tests for the adaptive algorithm and core application code.
 
-## Resources
+## Key models
 
-Check out a few resources that may come in handy when working with NestJS:
+- `User` name, email, password hash, role (`admin` or `user`).
+- `Question` text, options, correct option index, difficulty (1–10), weight.
+- `Test` title, description, unique URL key, active flag.
+- `TestAttempt` user, test, question snapshots, score, and summary fields.
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+## Main endpoints
 
-## Support
+### Auth
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- `POST /auth/register` register a new user.
+- `POST /auth/login` authenticate and receive a JWT.
+- `POST /auth/logout` logical logout used by the frontend.
 
-## Stay in touch
+### Questions (admin, JWT required)
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- `POST /questions` create a question.
+- `GET /questions` list questions.
+- `GET /questions/:id` get a question.
+- `PUT /questions/:id` update a question.
+- `DELETE /questions/:id` delete a question.
 
-## License
+### Tests
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- `POST /tests` create a test (admin).
+- `GET /tests` list tests (admin).
+- `GET /tests/:testId` get a test with aggregate stats (admin).
+- `GET /tests/:slug/public` public test details for a unique URL.
+- `POST /tests/:testId/start` start or resume an adaptive test for the authenticated user.
+- `POST /tests/:testId/questions/answer` submit an answer for the current test and receive the next question or final summary.

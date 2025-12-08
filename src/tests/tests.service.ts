@@ -42,12 +42,35 @@ export class TestsService {
 
   async getAdminTestWithStats(id: string) {
     const test = await this.getTestById(id);
-    const attempts = await this.attemptModel.find({ testId: test.id, isFinished: true }).exec();
+    const attempts = await this.attemptModel
+      .find({ testId: test.id, isFinished: true })
+      .populate('userId', 'email name')
+      .exec();
+
     const count = attempts.length;
     const averageScore =
       count === 0
         ? 0
         : attempts.reduce((sum, attempt) => sum + attempt.score, 0) / count;
+
+    const results = attempts.map((attempt) => {
+      const user = attempt.userId as any;
+      return {
+        id: attempt.id,
+        score: attempt.score,
+        totalCorrect: attempt.totalCorrect,
+        totalIncorrect: attempt.totalIncorrect,
+        questionsCount: attempt.questions.length,
+        finishedAt: attempt.finishedAt,
+        user: user
+          ? {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+            }
+          : null,
+      };
+    });
 
     return {
       test,
@@ -55,6 +78,7 @@ export class TestsService {
         attempts: count,
         averageScore,
       },
+      results,
     };
   }
 
@@ -79,6 +103,8 @@ export class TestsService {
     return {
       attemptId: attempt.id,
       question: nextQuestion,
+      questionsAnswered: attempt.questions.length,
+      maxQuestions: 20,
     };
   }
 
@@ -146,6 +172,8 @@ export class TestsService {
           totalIncorrect: attempt.totalIncorrect,
           questionsCount: attempt.questions.length,
         },
+        questionsAnswered: attempt.questions.length,
+        maxQuestions: 20,
       };
     }
 
@@ -161,6 +189,8 @@ export class TestsService {
     return {
       finished: false,
       question: nextQuestion,
+      questionsAnswered: attempt.questions.length,
+      maxQuestions: 20,
     };
   }
 

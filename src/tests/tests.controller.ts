@@ -4,21 +4,35 @@ import {
   Get,
   Param,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
+import { IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
 import { TestsService } from './tests.service';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles } from '../common/roles.decorator';
 import { Role } from '../common/roles';
 
 class CreateTestDto {
+  @IsString()
+  @MinLength(3)
   title: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
+
+  @IsString()
+  @MinLength(3)
   uniqueUrl: string;
 }
 
 class AnswerDto {
+  @IsString()
   questionId: string;
+
+  @IsInt()
+  @Min(0)
   selectedOptionIndex: number;
 }
 
@@ -54,20 +68,20 @@ export class TestsController {
 
   @Post(':testId/start')
   @UseGuards(JwtAuthGuard)
-  start(@Param('testId') testId: string, @Body('userId') userId: string) {
-    return this.testsService.startAttempt(testId, userId);
+  start(@Param('testId') testId: string, @Body() _body: Record<string, never>, @Req() req: any) {
+    return this.testsService.startAttempt(testId, req.user.userId);
   }
 
   @Post(':testId/questions/answer')
   @UseGuards(JwtAuthGuard)
   answer(
     @Param('testId') testId: string,
-    @Body('userId') userId: string,
     @Body() body: AnswerDto,
+    @Req() req: any,
   ) {
     return this.testsService.answerQuestion({
       testId,
-      userId,
+      userId: req.user.userId,
       questionId: body.questionId,
       selectedOptionIndex: body.selectedOptionIndex,
     });

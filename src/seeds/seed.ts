@@ -8,7 +8,7 @@ async function run() {
 
   const difficulties = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-  const tasks = [];
+  const tasks: Promise<unknown>[] = [];
 
   for (let i = 0; i < 500; i += 1) {
     const difficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
