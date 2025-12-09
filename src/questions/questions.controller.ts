@@ -12,12 +12,35 @@ import { QuestionsService } from './questions.service';
 import { JwtAuthGuard, RolesGuard } from '../common/guards';
 import { Roles } from '../common/roles.decorator';
 import { Role } from '../common/roles';
+import {
+  ArrayMinSize,
+  IsArray,
+  IsInt,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
 
 class QuestionDto {
+  @IsString()
   text: string;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsString({ each: true })
   options: string[];
+
+  @IsInt()
+  @Min(0)
   correctOptionIndex: number;
+
+  @IsInt()
+  @Min(1)
+  @Max(10)
   difficulty: number;
+
+  @IsInt()
+  @Min(1)
   weight: number;
 }
 
